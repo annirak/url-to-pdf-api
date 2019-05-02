@@ -12,7 +12,7 @@ function createLogger(filePath) {
     transports: [new winston.transports.Console({
       colorize: COLORIZE,
       label: fileName,
-      timestamp: true,
+      timestamp: false,
     })],
   });
 
