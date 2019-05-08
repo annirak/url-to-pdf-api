@@ -1,4 +1,4 @@
-const puppeteer = require('puppeteer');
+const myPool = require('./browser-pool');
 const _ = require('lodash');
 const config = require('../config');
 const logger = require('../util/logger')(__filename);
@@ -37,12 +37,7 @@ async function render(_opts = {}) {
 
   logOpts(opts);
 
-  const browser = await puppeteer.launch({
-    headless: !config.DEBUG_MODE,
-    ignoreHTTPSErrors: opts.ignoreHttpsErrors,
-    args: ['--disable-gpu', '--no-sandbox', '--disable-setuid-sandbox'],
-    sloMo: config.DEBUG_MODE ? 250 : undefined,
-  });
+  const browser = await myPool.acquire();
   const page = await browser.newPage();
 
   page.on('console', (...args) => logger.info('PAGE LOG:', ...args));
@@ -50,7 +45,9 @@ async function render(_opts = {}) {
   page.on('error', (err) => {
     logger.error(`Error event emitted: ${err}`);
     logger.error(err.stack);
-    browser.close();
+    page.close();
+    logger.info('Releasing browser to pool ..');
+    myPool.release(browser);
   });
 
 
@@ -155,10 +152,12 @@ async function render(_opts = {}) {
     logger.error(err.stack);
     throw err;
   } finally {
-    logger.info('Closing browser..');
     if (!config.DEBUG_MODE) {
-      await browser.close();
+      logger.info('Closing page ..');
+      await page.close();
     }
+    logger.info('Releasing browser to pool ..');
+    myPool.release(browser);
   }
 
   return data;
