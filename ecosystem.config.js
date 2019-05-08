@@ -16,16 +16,16 @@ module.exports = {
       NODE_ENV: 'development',
       PORT: 9000,
       ALLOW_HTTP: true,
-      DEBUG_MODE: false,
-      LOG_LEVEL: 'debug'
+      DEBUG_MODE: true,
+      LOG_LEVEL: 'debug',
     },
     env_production: {
       NODE_ENV: 'production',
       PORT: 9000,
       ALLOW_HTTP: true,
       DEBUG_MODE: false,
-      LOG_LEVEL: 'debug'
-    }
+      LOG_LEVEL: 'info',
+    },
   }],
 
   deploy: {
@@ -35,7 +35,7 @@ module.exports = {
       ref: 'origin/master',
       repo: 'git@github.com:repo.git',
       path: '/var/www/production',
-      'post-deploy': 'npm install && pm2 reload ecosystem.config.js --env production'
-    }
-  }
+      'post-deploy': 'npm install && pm2 reload ecosystem.config.js --env production',
+    },
+  },
 };

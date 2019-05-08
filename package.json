@@ -7,10 +7,17 @@
     "node": "8.x.x"
   },
   "scripts": {
-    "start": "pm2-runtime start ecosystem.config.js --env production",
+    "startnodaemon": "pm2-runtime start ecosystem.config.js --env production",
     "develop": "nodemon --watch ./src -e js src/index.js",
     "test": "mocha --timeout 10000 && npm run lint",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "pm2": "node_modules/.bin/pm2",
+    "start": "node_modules/.bin/pm2 start ecosystem.config.js --env production",
+    "restart": "node_modules/.bin/pm2 restart url-to-pdf --update-env",
+    "reload": "node_modules/.bin/pm2 reload ecosystem.config.js",
+    "stop": "node_modules/.bin/pm2 stop url-to-pdf",
+    "startdev": "node_modules/.bin/pm2 start ecosystem.config.js",
+    "flush": "node_modules/.bin/pm2 flush"
   },
   "repository": {
     "type": "git",
@@ -29,6 +36,7 @@
     "cors": "^2.8.4",
     "express": "^4.15.5",
     "express-validation": "^1.0.2",
+    "generic-pool": "^3.7.1",
     "joi": "^11.1.1",
     "lodash": "^4.17.4",
     "morgan": "^1.9.0",
