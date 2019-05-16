@@ -37,17 +37,17 @@ async function render(_opts = {}) {
 
   logOpts(opts);
 
-  const browser = await myPool.acquire();
-  const page = await browser.newPage();
+  const page = await myPool.acquire();
 
   page.on('console', (...args) => logger.info('PAGE LOG:', ...args));
 
   page.on('error', (err) => {
-    logger.error(`Error event emitted: ${err}`);
-    logger.error(err.stack);
-    page.close();
-    logger.info('Releasing browser to pool ..');
-    myPool.release(browser);
+    // logger.error(`Error event emitted: ${err}`);
+    logger.error('Error event emitted', err.stack);
+    if (myPool.isBorrowedResource(page)) {
+      logger.info('Releasing page to pool ..');
+      myPool.release(page);
+    }
   });
 
 
@@ -153,12 +153,8 @@ async function render(_opts = {}) {
     logger.error(err.stack);
     throw err;
   } finally {
-    if (!config.DEBUG_MODE) {
-      logger.info('Closing page ..');
-      await page.close();
-    }
-    logger.info('Releasing browser to pool ..');
-    myPool.release(browser);
+    logger.info('Releasing page to pool');
+    myPool.release(page);
   }
 
   return data;
