@@ -5,7 +5,7 @@ const fs = require('fs');
 const request = require('supertest');
 const BPromise = require('bluebird');
 const { getResource } = require('./util');
-const PDFParser = require('pdf2json');
+const pdf = require('pdf-parse');
 const createApp = require('../src/app');
 
 const DEBUG = false;
@@ -16,23 +16,19 @@ BPromise.config({
 
 const app = createApp();
 
-function getPdfTextContent(buffer) {
-  return new BPromise((resolve, reject) => {
-    const pdfParser = new PDFParser();
-    pdfParser.on('pdfParser_dataError', (err) => {
-      reject(err);
-    });
-    pdfParser.on('pdfParser_dataReady', () => {
-      resolve(pdfParser.getRawTextContent());
-    });
-
-    pdfParser.parseBuffer(buffer);
-  });
+function normalisePdfText(text) {
+  // Replace all non-alphanumeric characters with a hyphen to resolve some difference in
+  // character encoding when comparing strings extracted from the PDF and strings
+  // defined in the test environment
+  return text.replace(/[\W_]+/g, '-');
 }
 
-describe('GET /api/render', function test() {
-  this.timeout(1000);
+function getPdfTextContent(buffer) {
+  return pdf(buffer)
+    .then(data => normalisePdfText(data.text));
+}
 
+describe('GET /api/render', () => {
   it('request must have "url" query parameter', () =>
     request(app).get('/api/render').expect(400)
   );
@@ -110,10 +106,6 @@ describe('POST /api/render', () => {
       })
   );
 
-  /*
-  Disabled until we get the setContent API working with waitFor parameters
-
-
   it('rendering large html should succeed', () =>
     request(app)
       .post('/api/render')
@@ -126,7 +118,6 @@ describe('POST /api/render', () => {
         chai.expect(length).to.be.above(1024 * 1024 * 1);
       })
   );
-  */
 
   it('rendering html with large linked images should succeed', () =>
     request(app)
@@ -181,9 +172,9 @@ describe('POST /api/render', () => {
           fs.writeFileSync('./cookies-content.txt', text);
         }
 
-        chai.expect(text).to.have.string('Number of cookies received: 2');
-        chai.expect(text).to.have.string('Cookie named "url­to­pdf­test"');
-        chai.expect(text).to.have.string('Cookie named "url­to­pdf­test­2"');
+        chai.expect(text).to.have.string('Number-of-cookies-received-2');
+        chai.expect(text).to.have.string('Cookie-named-url-to-pdf-test');
+        chai.expect(text).to.have.string('Cookie-named-url-to-pdf-test-2');
       })
   );
 });
