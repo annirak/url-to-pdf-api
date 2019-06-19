@@ -14,10 +14,11 @@
     "pm2": "node_modules/.bin/pm2",
     "start": "node_modules/.bin/pm2 start ecosystem.config.js --env production",
     "restart": "node_modules/.bin/pm2 restart url-to-pdf --update-env",
-    "reload": "node_modules/.bin/pm2 reload ecosystem.config.js",
+    "reload": "node_modules/.bin/pm2 reload ecosystem.config.js --env production",
     "stop": "node_modules/.bin/pm2 stop url-to-pdf",
     "startdev": "node_modules/.bin/pm2 start ecosystem.config.js",
-    "flush": "node_modules/.bin/pm2 flush"
+    "flush": "node_modules/.bin/pm2 flush url-to-pdf",
+    "cleanReload": "npm run flush && npm run reload"
   },
   "repository": {
     "type": "git",

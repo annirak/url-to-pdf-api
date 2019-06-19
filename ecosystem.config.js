@@ -4,7 +4,7 @@ module.exports = {
     script: 'src/index.js',
     // Options reference: https://pm2.io/doc/en/runtime/reference/ecosystem-file/
     exp_backoff_restart_delay: 100,
-    instances: 1,
+    instances: 2,
     autorestart: true,
     watch: false,
     max_memory_restart: '1G',

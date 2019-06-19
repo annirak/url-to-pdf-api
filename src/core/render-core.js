@@ -38,6 +38,7 @@ async function render(_opts = {}) {
   logOpts(opts);
 
   const page = await myPool.acquire();
+  logger.info(`Pool Borrowed: ${myPool.borrowed} Available:${myPool.available} Pending:${myPool.pending} Size:${myPool.size}`);
 
   page.on('console', (...args) => logger.info('PAGE LOG:', ...args));
 
@@ -45,8 +46,8 @@ async function render(_opts = {}) {
     // logger.error(`Error event emitted: ${err}`);
     logger.error('Error event emitted', err.stack);
     if (myPool.isBorrowedResource(page)) {
-      logger.info('Releasing page to pool ..');
-      myPool.release(page);
+      logger.info('Destroying page because of error ..');
+      myPool.destroy(page);
     }
   });
 
@@ -88,8 +89,8 @@ async function render(_opts = {}) {
     }
 
     if (opts.html) {
-      logger.info('Set HTML ..');
-      await page.setContent(opts.html, opts.goto);
+      logger.info('Set HTML ..');      
+      await page.goto(`data:text/html;charset=UTF-8,${opts.html}`, opts.goto);
     } else {
       logger.info(`Goto url ${opts.url} ..`);
       await page.goto(opts.url, opts.goto);
@@ -108,7 +109,7 @@ async function render(_opts = {}) {
     if (this.failedResponses.length) {
       logger.warn(`Number of failed requests: ${this.failedResponses.length}`);
       this.failedResponses.forEach((response) => {
-        logger.warn(`${response.status} ${response.url}`);
+        logger.warn(`${response.failure().errorText} ${response.url()}`);
       });
 
       if (opts.failEarly === 'all') {
@@ -149,11 +150,16 @@ async function render(_opts = {}) {
     }
   } catch (err) {
     logger.error(`Error when rendering page: ${err}`);
-    logger.error(err.stack);
+    if (myPool.isBorrowedResource(page)) {
+      logger.info('Destroying page because of error rendering page');
+      myPool.destroy(page);
+    }
     throw err;
   } finally {
-    logger.info('Releasing page to pool');
-    myPool.release(page);
+    if (myPool.isBorrowedResource(page)) {
+      logger.info('Releasing page to pool');
+      myPool.release(page);
+    }
   }
 
   return data;
